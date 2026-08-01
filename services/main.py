@@ -16,8 +16,7 @@ DASHBOARD_ORIGINS = [
     origin.strip()
     for origin in getenv(
         "DASHBOARD_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000",
-        "https://robot-car.phatchung.dev"
+        "http://localhost:3000,  https://robot-car.phatchung.dev"
     ).split(",")
     if origin.strip()
 ]
