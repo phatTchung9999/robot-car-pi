@@ -6,12 +6,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.hardware.motor import MotorController
+from app.services.iot_hub import IoTHubDeviceService
 from app.services.motion import MotionService
 
 
-COMMAND_LEASE_SECONDS = 0.4
+COMMAND_LEASE_SECONDS = int(getenv("COMMAND_LEASE_MS", "750")) / 1000
 WATCHDOG_INTERVAL_SECONDS = 0.05
 DEFAULT_SPEED = 0.5
+IOTHUB_DEVICE_CONNECTION_STRING = getenv("IOTHUB_DEVICE_CONNECTION_STRING")
 DASHBOARD_ORIGINS = [
     origin.strip()
     for origin in getenv(
@@ -34,11 +36,30 @@ async def motor_watchdog() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     motion.stop()
+    iot_service = None
+    method_task = None
+
+    if IOTHUB_DEVICE_CONNECTION_STRING:
+        iot_service = IoTHubDeviceService(
+            IOTHUB_DEVICE_CONNECTION_STRING,
+            motion,
+        )
+        await iot_service.connect()
+
     watchdog_task = asyncio.create_task(motor_watchdog())
+    if iot_service is not None:
+        method_task = asyncio.create_task(iot_service.receive_methods())
 
     try:
         yield
     finally:
+        if method_task is not None:
+            method_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await method_task
+        if iot_service is not None:
+            await iot_service.disconnect()
+
         watchdog_task.cancel()
 
         with suppress(asyncio.CancelledError):

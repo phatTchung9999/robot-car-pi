@@ -1,45 +1,4 @@
-# Python bytecode and caches
+.env
+.venv/
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Build and packaging output
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# Test, coverage, and type-checker caches
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.mypy_cache/
-.ruff_cache/
-.tox/
-.nox/
-
-# Environment variables and local secrets
-.env
-.env.*
-!.env.example
-
-# Logs and runtime files
-*.log
-*.pid
-
-# Editors and IDEs
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Operating system metadata
-.DS_Store
-Thumbs.db

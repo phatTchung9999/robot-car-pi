@@ -24,7 +24,12 @@ class MotionService:
     def command_lease_seconds(self) -> float:
         return self._command_lease_seconds
 
-    def move(self, direction: Direction, speed: float) -> None:
+    def move(
+        self,
+        direction: Direction,
+        speed: float,
+        command_lease_seconds: float | None = None,
+    ) -> None:
         actions = {
             "forward": self._motor.forward,
             "backward": self._motor.backward,
@@ -37,11 +42,16 @@ class MotionService:
             raise ValueError(f"Unsupported movement direction: {direction}")
 
         speed = max(0.0, min(1.0, speed))
+        lease_seconds = (
+            self._command_lease_seconds
+            if command_lease_seconds is None
+            else max(0.0, command_lease_seconds)
+        )
 
         with self._lock:
             action(speed)
             self._direction = direction
-            self._stop_deadline = monotonic() + self._command_lease_seconds
+            self._stop_deadline = monotonic() + lease_seconds
 
     def stop(self) -> None:
         with self._lock:

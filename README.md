@@ -57,6 +57,18 @@ The `DASHBOARD_ORIGINS` environment variable accepts a comma-separated list of w
 export DASHBOARD_ORIGINS="http://localhost:3000,https://robot-car.example.com"
 ```
 
+To receive commands through Azure IoT Hub, configure the device connection
+string and use the same movement lease as the cloud backend:
+
+```bash
+export IOTHUB_DEVICE_CONNECTION_STRING="HostName=<hub>.azure-devices.net;DeviceId=robot-car-01;SharedAccessKey=<device-key>"
+export COMMAND_LEASE_MS="750"
+```
+
+Use a device connection string here, not an IoT Hub service-policy connection
+string. Keep it outside Git. If the variable is omitted, the local HTTP API
+continues to work without Azure IoT Hub.
+
 ## Run the API
 
 Run this command from the project root on the Raspberry Pi:
@@ -79,7 +91,12 @@ The interactive API documentation is available at `http://<raspberry-pi-ip>:8000
 | `POST` | `/api/motor/turn-right` | Turn right |
 | `POST` | `/api/motor/stop` | Stop immediately |
 
-Movement commands use a default speed of 50%. For safety, each command has a 400 ms lease. A controlling dashboard should send movement commands repeatedly while a button or control is held; the backend stops the motors when commands stop arriving.
+Movement commands use a default speed of 50%. For safety, each command has a configurable lease (750 ms by default). A controlling dashboard should send movement commands repeatedly while a button or control is held; the backend stops the motors when commands stop arriving.
+
+Cloud commands arrive through the `setMotion` IoT Hub direct method. They are
+validated for direction, speed, lease, expiration, and ordering before reaching
+the motors. The local watchdog remains responsible for stopping the car when
+command refreshes stop arriving.
 
 ## Example
 
